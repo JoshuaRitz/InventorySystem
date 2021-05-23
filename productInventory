@@ -1,0 +1,168 @@
+public class ProductInventory {
+	//Initializing inventory
+	ProductNode inventoryHead = null;
+	
+	public void showInventory() {
+		ProductNode curr = inventoryHead;
+		
+		System.out.println("Product Name" + "\t\t\t\t" + "Location" + "\t" +  "Qty" + "\t" + "Price");
+		System.out.println("------------------------------------------------------------------------");
+		while(curr != null) {
+			//Prints data for node
+			System.out.println(curr.productName + "\t" + curr.locator + "\t" + curr.quantity + "\t$" + curr.price);
+			
+			//Moves to next node
+			curr = curr.next;
+		}
+		System.out.println("------------------------------------------------------------------------");
+	}
+	
+	public int getTotalQuantity() {
+		int totalQuantity = 0;
+		ProductNode temp = inventoryHead;
+		//Checks for empty inventory
+		if(temp == null) {
+			throw new ProductException("No items in inventory");
+		}
+		//Counts total inventory
+		while(temp != null) {
+			totalQuantity += temp.quantity;
+			temp = temp.next;
+		}
+		return totalQuantity;
+	}
+	
+	public ProductNode removeMaximum() {
+		ProductNode curr = inventoryHead;
+		ProductNode maxNode = null;
+		int max;
+		
+		//Checks for empty inventory
+		if(inventoryHead == null) {
+			throw new ProductException("No items in inventory");
+		} else {
+			max = curr.quantity;
+			maxNode = curr;
+			
+			//Finds max quantity
+			while(curr != null) {
+				if(max < curr.quantity) {
+					max = curr.quantity;
+					maxNode = curr;
+				}
+				curr = curr.next;
+			}
+			if(maxNode != null) {
+				removeProduct(maxNode.productName, maxNode.locator);
+			}
+		}
+		return maxNode;
+	}
+	
+	public void sortInventory() {
+		ProductNode sortedNode = null;
+		
+		//Sorts inventory putting maximum on top
+		while(inventoryHead != null) {
+			ProductNode removedMax = removeMaximum();
+			removedMax.next = null;
+			if(sortedNode == null) {
+				sortedNode = removedMax;
+			} else {
+				ProductNode last = sortedNode;
+				
+				while(last.next != null) {
+					last = last.next;
+				}
+				last.next = removedMax;
+			}
+		}
+		inventoryHead = sortedNode;
+	}
+
+
+
+	public void addProduct(String productName, String locator, int quantity, float price) { 
+		ProductNode node = new ProductNode(productName, locator, quantity, price);
+		validateProduct(node);
+		
+		//Adds product to linked list
+		if(inventoryHead == null) {
+			inventoryHead = node;
+		} else {
+			ProductNode last = inventoryHead;
+			while(last.next != null) {
+				last = last.next;
+			}
+			last.next = node;
+		}
+	}
+
+	public void removeProduct(String productName, String locator) {
+		ProductNode curr = inventoryHead;
+		ProductNode prev = null;
+		
+		while(curr != null) {
+			if(locator.equalsIgnoreCase(curr.locator) && productName.equalsIgnoreCase(curr.productName)) {
+				//If we need to remove the first node
+				if(curr == inventoryHead) {
+					//Make the second node the inventoryHead
+					inventoryHead = curr.next;
+				} else {
+					//Otherwise attach the previous node to the next node
+					prev.next = curr.next;
+				}
+			}
+			prev = curr;
+			curr = curr.next;
+		}
+	}
+
+	public int countProduct(String productName) {
+		int count = 0;
+		//Counts product inventory based on productName
+		ProductNode node = inventoryHead;
+		while(node != null) {
+			if(productName.equalsIgnoreCase(node.productName)) {
+				count += node.quantity;
+			}
+			node = node.next;
+		}
+		return count;
+	}
+
+	public int countNeededQuantity(String productName, int neededQuantity) {
+		//Calls countProduct and then calculates needed minus current quantity
+		int currQty = countProduct(productName);
+		return neededQuantity - currQty;
+	}
+	
+	//Method to check if product already exists in the inventory
+	private void validateProduct(ProductNode node) {
+	       ProductNode product = getProduct(node.locator, node.productName);
+	       if (product != null) {
+	           throw new ProductException("Product already exists in the inventory");
+	       }
+	       if (node.price < 0 || node.quantity < 0) {
+	           throw new ProductException("Invalid Input");
+	       }
+	   }
+	
+	//Works with validateProduct to pass locator and name information
+	private ProductNode getProduct(String locator, String name) {
+	       ProductNode node = inventoryHead;
+	       while (node != null && !(locator.equalsIgnoreCase(node.locator) && name.equalsIgnoreCase(node.productName))) {
+	           node = node.next;
+	       }
+	       return node;
+	   }
+	
+	class ProductException extends RuntimeException {
+		//Eclipse suggested addition
+		private static final long serialVersionUID = 1L;
+
+		public ProductException(String s) {
+			super(s);
+		}
+	}
+}
